@@ -13,7 +13,7 @@ export default function Home() {
   const [repoStructure, setRepoStructure] = useState(null);
   const [socket, setSocket] = useState<Socket | null>(null);
   const [loading, setLoading] = useState(true);
-  const [repoUrl, setRepoUrl] = useState('');
+  const [repoUrl, setRepoUrl] = useState('/workspace');
 
   useEffect(() => {
     // Initialize WebSocket connection
@@ -29,16 +29,39 @@ export default function Home() {
       setRepoStructure(data);
     });
 
-    // Load initial mock data (replace with actual API call)
-    loadMockData();
+    // Trigger initial analysis
+    analyzeRepository('/workspace');
 
     return () => {
       newSocket.close();
     };
   }, []);
 
+  const analyzeRepository = async (urlOverride?: string) => {
+    try {
+      setLoading(true);
+      const urlToAnalyze = urlOverride || repoUrl;
+      const response = await axios.post('http://localhost:8000/api/analyze', {
+        repo_url: urlToAnalyze
+      });
+      
+      // Update state with real data
+      if (response.data && response.data.data) {
+        setRepoStructure(response.data.data.structure);
+        setMetrics(response.data.data.metrics);
+      }
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to analyze repository:', error);
+      setLoading(false);
+      // Fallback to mock data if API fails (for demo purposes)
+      loadMockData();
+    }
+  };
+
   const loadMockData = () => {
-    // Mock data for initial load
+    // Mock data for fallback
     setMetrics({
       complexity: 72,
       coverage: 87,
@@ -53,27 +76,7 @@ export default function Home() {
       { id: 'core', name: 'core', size: 150, health: 0.9, x: 0, y: 0, z: 0, type: 'core' },
       { id: 'auth', name: 'auth', size: 80, health: 0.7, x: -3, y: 2, z: 1, type: 'module' },
       { id: 'api', name: 'api', size: 120, health: 0.6, x: 3, y: 1, z: -1, type: 'module' },
-      { id: 'database', name: 'database', size: 100, health: 0.85, x: 0, y: -3, z: 2, type: 'module' },
-      { id: 'ui', name: 'ui-components', size: 140, health: 0.4, x: -2, y: -1, z: -3, type: 'module' },
-      { id: 'utils', name: 'utils', size: 60, health: 0.95, x: 4, y: 3, z: 2, type: 'module' },
     ]);
-
-    setLoading(false);
-  };
-
-  const analyzeRepository = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.post('http://localhost:8000/api/analyze', {
-        repo_url: repoUrl
-      });
-      setRepoStructure(response.data.structure);
-      setMetrics(response.data.metrics);
-      setLoading(false);
-    } catch (error) {
-      console.error('Failed to analyze repository:', error);
-      setLoading(false);
-    }
   };
 
   if (loading) {
@@ -117,7 +120,7 @@ export default function Home() {
             className="px-4 py-2 bg-black/80 border border-cyan-500/50 text-cyan-400 rounded"
           />
           <button
-            onClick={analyzeRepository}
+            onClick={() => analyzeRepository()}
             className="px-6 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500 text-cyan-400 rounded transition-colors"
           >
             ANALYZE
