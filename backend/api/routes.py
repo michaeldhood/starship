@@ -7,19 +7,16 @@ from pydantic import BaseModel, HttpUrl
 from typing import Dict, Any, List, Optional
 import asyncio
 
-from analyzers import (
-    analyze_complexity,
-    analyze_dependencies,
-    analyze_documentation,
-    detect_yagni,
-    analyze_repository
-)
+from analyzers import analyze_repository
 
 router = APIRouter()
 
+# Simple in-memory cache
+analysis_cache = {}
+
 class RepositoryRequest(BaseModel):
     """Repository analysis request model"""
-    repo_url: HttpUrl
+    repo_url: str  # Changed to str to allow local paths
     branch: Optional[str] = "main"
     depth: Optional[int] = 1
     include_tests: Optional[bool] = True
@@ -34,18 +31,6 @@ class MetricsResponse(BaseModel):
     tech_debt: float
     vulnerabilities: Dict[str, int]
     timestamp: str
-
-class ModuleInfo(BaseModel):
-    """Module information model"""
-    id: str
-    name: str
-    path: str
-    size: int
-    health: float
-    complexity: float
-    coverage: float
-    dependencies: List[str]
-    issues: List[str]
 
 @router.post("/analyze")
 async def analyze_repository_endpoint(
@@ -63,8 +48,13 @@ async def analyze_repository_endpoint(
             depth=request.depth
         )
         
+        # Cache results
+        repo_id = request.repo_url.split('/')[-1] or "unknown"
+        analysis_cache[repo_id] = result
+        
         return {
             "status": "success",
+            "repo_id": repo_id,
             "data": result
         }
     except Exception as e:
@@ -75,22 +65,23 @@ async def get_repository_metrics(repo_id: str):
     """
     Get cached metrics for a repository
     """
-    # TODO: Implement cache lookup
+    if repo_id in analysis_cache:
+        return {
+            "repo_id": repo_id,
+            "metrics": analysis_cache[repo_id]["metrics"]
+        }
+        
+    # Fallback for demo if not found
     return {
         "repo_id": repo_id,
         "metrics": {
-            "complexity": 72.5,
-            "coverage": 87.3,
-            "documentation": 65.0,
-            "yagni": 28.4,
-            "dependencies": 143,
-            "tech_debt": 34.2,
-            "vulnerabilities": {
-                "critical": 0,
-                "high": 1,
-                "medium": 3,
-                "low": 7
-            }
+            "complexity": 0,
+            "coverage": 0,
+            "documentation": 0,
+            "yagni": 0,
+            "dependencies": 0,
+            "tech_debt": 0,
+            "vulnerabilities": {"critical": 0, "high": 0, "medium": 0, "low": 0}
         }
     }
 
@@ -99,40 +90,16 @@ async def get_repository_modules(repo_id: str):
     """
     Get module structure for a repository
     """
-    # TODO: Implement actual module analysis
-    modules = [
-        {
-            "id": "core",
-            "name": "core",
-            "path": "/src/core",
-            "size": 15000,
-            "health": 0.9,
-            "x": 0, "y": 0, "z": 0,
-            "type": "core"
-        },
-        {
-            "id": "auth",
-            "name": "authentication",
-            "path": "/src/auth",
-            "size": 8000,
-            "health": 0.7,
-            "x": -3, "y": 2, "z": 1,
-            "type": "module"
-        },
-        {
-            "id": "api",
-            "name": "api",
-            "path": "/src/api",
-            "size": 12000,
-            "health": 0.6,
-            "x": 3, "y": 1, "z": -1,
-            "type": "module"
+    if repo_id in analysis_cache:
+        return {
+            "repo_id": repo_id,
+            "modules": analysis_cache[repo_id]["structure"]
         }
-    ]
-    
+
+    # Fallback for demo if not found
     return {
         "repo_id": repo_id,
-        "modules": modules
+        "modules": []
     }
 
 @router.get("/health")
