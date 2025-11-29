@@ -51,8 +51,8 @@ export default function MetricsDashboard({ metrics }: MetricsDashboardProps) {
           </div>
           <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
             <div 
-              className={\`h-full \${getBarColor(metrics.complexity, true)} transition-all duration-500\`}
-              style={{ width: \`\${metrics.complexity}%\` }}
+              className={`h-full ${getBarColor(metrics.complexity, true)} transition-all duration-500`}
+              style={{ width: `${metrics.complexity}%` }}
             />
           </div>
         </div>
@@ -68,7 +68,7 @@ export default function MetricsDashboard({ metrics }: MetricsDashboardProps) {
           <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
             <div 
               className="h-full bg-cyan-500 transition-all duration-500"
-              style={{ width: \`\${metrics.coverage}%\` }}
+              style={{ width: `${metrics.coverage}%` }}
             />
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function MetricsDashboard({ metrics }: MetricsDashboardProps) {
           <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
             <div 
               className="h-full bg-blue-500 transition-all duration-500"
-              style={{ width: \`\${metrics.documentation}%\` }}
+              style={{ width: `${metrics.documentation}%` }}
             />
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function MetricsDashboard({ metrics }: MetricsDashboardProps) {
           <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
             <div 
               className="h-full bg-purple-500 transition-all duration-500"
-              style={{ width: \`\${metrics.yagni}%\` }}
+              style={{ width: `${metrics.yagni}%` }}
             />
           </div>
         </div>
@@ -116,7 +116,7 @@ export default function MetricsDashboard({ metrics }: MetricsDashboardProps) {
           <div className="w-full bg-gray-800 h-2 rounded-full overflow-hidden">
             <div 
               className="h-full bg-orange-500 transition-all duration-500"
-              style={{ width: \`\${metrics.techDebt}%\` }}
+              style={{ width: `${metrics.techDebt}%` }}
             />
           </div>
         </div>

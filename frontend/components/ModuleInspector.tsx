@@ -72,7 +72,7 @@ export default function ModuleInspector({ module, onClose }: ModuleInspectorProp
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Coverage:</span>
-            <span className="text-white">{module.coverage ? \`\${module.coverage}%\` : 'N/A'}</span>
+            <span className="text-white">{module.coverage ? `${module.coverage}%` : 'N/A'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-400">Last Modified:</span>
