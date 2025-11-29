@@ -7,7 +7,7 @@ import ast
 import os
 from typing import Dict, List, Any, Optional
 from pathlib import Path
-from radon.cc import cc_visit, cc_rank
+from radon.complexity import cc_visit, cc_rank
 from radon.metrics import mi_visit, mi_rank
 from radon.raw import analyze
 import asyncio
