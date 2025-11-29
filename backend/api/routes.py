@@ -63,10 +63,25 @@ async def analyze_repository_endpoint(
             depth=request.depth
         )
         
-        return {
-            "status": "success",
-            "data": result
-        }
+        # Return result directly (frontend expects response.data.structure and response.data.metrics)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/analyze/local")
+async def analyze_local_repository():
+    """
+    Analyze the local repository (backend directory)
+    """
+    try:
+        import os
+        from pathlib import Path
+        
+        # Get the backend directory path
+        backend_path = Path(__file__).parent.parent
+        
+        result = await analyze_repository(str(backend_path))
+        return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
