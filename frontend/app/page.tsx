@@ -15,30 +15,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [repoUrl, setRepoUrl] = useState('');
 
-  useEffect(() => {
-    // Initialize WebSocket connection
-    const newSocket = io('http://localhost:8000');
-    setSocket(newSocket);
-
-    // Listen for real-time updates
-    newSocket.on('metrics_update', (data) => {
-      setMetrics(data);
-    });
-
-    newSocket.on('structure_update', (data) => {
-      setRepoStructure(data);
-    });
-
-    // Load initial mock data (replace with actual API call)
-    loadMockData();
-
-    return () => {
-      newSocket.close();
-    };
-  }, []);
-
   const loadMockData = () => {
-    // Mock data for initial load
+    // Mock data for fallback
     setMetrics({
       complexity: 72,
       coverage: 87,
@@ -61,14 +39,75 @@ export default function Home() {
     setLoading(false);
   };
 
+  const analyzeLocalRepository = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('http://localhost:8000/api/analyze/local');
+      
+      // Transform metrics to match frontend expectations
+      const metricsData = response.data.metrics || {};
+      setMetrics({
+        complexity: metricsData.complexity || 0,
+        coverage: metricsData.coverage || 0,
+        documentation: metricsData.documentation || 0,
+        yagni: metricsData.yagni || 0,
+        dependencies: metricsData.dependencies || 0,
+        techDebt: metricsData.tech_debt || 0,
+        vulnerabilities: metricsData.vulnerabilities || { critical: 0, high: 0, medium: 0, low: 0 }
+      });
+      
+      setRepoStructure(response.data.structure || []);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to analyze local repository:', error);
+      // Fallback to mock data if API fails
+      loadMockData();
+    }
+  };
+
+  useEffect(() => {
+    // Initialize WebSocket connection
+    const newSocket = io('http://localhost:8000');
+    setSocket(newSocket);
+
+    // Listen for real-time updates
+    newSocket.on('metrics_update', (data) => {
+      setMetrics(data);
+    });
+
+    newSocket.on('structure_update', (data) => {
+      setRepoStructure(data);
+    });
+
+    // Analyze local repository on startup
+    analyzeLocalRepository();
+
+    return () => {
+      newSocket.close();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const analyzeRepository = async () => {
     try {
       setLoading(true);
       const response = await axios.post('http://localhost:8000/api/analyze', {
         repo_url: repoUrl
       });
-      setRepoStructure(response.data.structure);
-      setMetrics(response.data.metrics);
+      
+      // Transform metrics to match frontend expectations
+      const metricsData = response.data.metrics || {};
+      setMetrics({
+        complexity: metricsData.complexity || 0,
+        coverage: metricsData.coverage || 0,
+        documentation: metricsData.documentation || 0,
+        yagni: metricsData.yagni || 0,
+        dependencies: metricsData.dependencies || 0,
+        techDebt: metricsData.tech_debt || 0,
+        vulnerabilities: metricsData.vulnerabilities || { critical: 0, high: 0, medium: 0, low: 0 }
+      });
+      
+      setRepoStructure(response.data.structure || []);
       setLoading(false);
     } catch (error) {
       console.error('Failed to analyze repository:', error);
